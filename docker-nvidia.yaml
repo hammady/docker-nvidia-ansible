@@ -1,0 +1,76 @@
+- name: docker dependencies installer
+  hosts: all
+  become: true
+  tasks:
+  - name: install deps
+    apt:
+      name: "{{item}}"
+      state: present
+      update_cache: yes
+    loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+  - name: add official GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+  - name: add apt repository for docker
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable # TODO parameterize: lsb_release -cs
+      state: present
+
+- name: docker engine installer
+  hosts: all
+  become: true
+  tasks:
+  - name: install docker
+    apt:
+      name: "{{item}}"
+      state: latest
+      update_cache: yes
+    loop:
+      - docker-ce
+      - docker-compose-plugin
+      - containerd.io
+  - name: ensure docker service is running
+    service:
+      name: docker
+      state: started
+      enabled: yes
+  - name: add ansible user to docker group
+    user:
+      name: "{{ ansible_user }}"
+      groups: docker
+      append: yes
+  - name: restart docker
+    service:
+      name: docker
+      state: restarted
+
+- name: docker client installer
+  hosts: all
+  become: true
+  tasks:
+  - name: install docker client
+    apt:
+      name: "docker-ce-cli"
+      state: latest
+      update_cache: yes
+
+- hosts: all
+  become: true
+  roles:
+  - nvidia.nvidia_driver
+  - nvidia.nvidia_docker
+
+- name: apt cleaner
+  hosts: all
+  tasks:
+  - name: Remove dependencies that are no longer required and useless packages from the cache
+    become: yes
+    apt:
+      autoremove: yes
+      autoclean: true
