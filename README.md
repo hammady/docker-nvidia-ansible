@@ -43,10 +43,8 @@ is to use `pip`:
 
 ## Installation
 To launch the installation process that will configure all target
-machines at once, run the following:
+machines at once, run the following in the root directory of this repository:
 ```bash
-git clone https://github.com/hammady/docker-nvidia-ansible.git
-cd docker-nvidia-ansible
 ansible-playbook docker-nvidia.yaml --inventory ./inventory.ini
 ```
 
